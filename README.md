@@ -81,3 +81,197 @@ print(f'out: {out}')
 ```
 ![Картинка 1](images/lab_01/07.png)
 
+## Лабораторная работа 2
+
+### Задание 1
+```python 
+def min_max(nums):
+    if nums == []:
+        return 'ValueError'
+    
+    minimum = nums[0]
+    maximum = nums[0]
+
+    for i in range(len(nums)):
+        if nums[i] < minimum:
+            minimum = nums[i]
+        if nums[i] > maximum:
+            maximum = nums[i]
+
+    return (minimum, maximum)
+
+print('min_max')
+print(min_max([3, -1, 5, 5, 0]))
+print(min_max([42]))
+print(min_max([-5, -2, -9]))
+print(min_max([]))
+print(min_max([1.5, 2, 2.0, -3.1]))
+
+def unique_sorted(nums):
+    if nums == []:
+        return []
+    
+    unique = []
+    for x in nums:
+        if x not in unique:
+            unique.append(x)
+
+    n = len(unique)
+    for i in range(n):
+        for j in range(0, n-i-1):
+            if unique[j] > unique[j+1]:
+                unique[j], unique[j+1] = unique[j+1], unique[j]
+    
+    return unique
+
+print('unique_sorted')
+print(unique_sorted([3, 1, 2, 1, 3]))
+print(unique_sorted([]))
+print(unique_sorted([-1, -1, 0, 2, 2]))
+print(unique_sorted([1.0, 1, 2.5, 2.5, 0]))
+
+def flatten(mat):
+    result = []
+    for i in range(len(mat)):
+        if type(mat[i]) != list and type(mat[i]) != tuple:
+            return 'TypeError'
+        
+        for j in range(len(mat[i])):
+            result.append(mat[i][j])
+    
+    return result
+
+print('flatten')
+print(flatten([[1, 2], [3, 4]]))
+print(flatten([[1, 2], (3, 4, 5)]))
+print(flatten([[1], [], [2, 3]]))
+print(flatten([[1, 2], "ab"]))
+```
+![Картинка 1](images/lab_02/01.png)
+
+### Задание 2
+```python
+def transpose(mat):
+    if mat == []:
+        return []
+    
+    n = len(mat[0])
+    for i in range(len(mat)):
+        if len(mat[i]) != n:
+            return 'ValueError'
+    
+    new_mat = []
+    for j in range(len(mat[0])):  
+        new_row = []
+        for i in range(len(mat)):  
+            new_row.append(mat[i][j])
+        new_mat.append(new_row)
+    
+    return new_mat
+
+print('transpose')
+print(transpose([[1, 2, 3]]))
+print(transpose([[1], [2], [3]]))
+print(transpose([[1, 2], [3, 4]]))
+print(transpose([]))
+print(transpose([[1, 2], [3]]))
+
+
+def row_sums(mat):
+    if mat == []:
+        return []
+    
+    n = len(mat[0])
+    for i in range(len(mat)):
+        if len(mat[i]) != n:
+            return 'ValueError'
+    
+    sums = []
+    for i in range(len(mat)):
+        s = 0
+        for j in range(len(mat[i])):
+            s = s + mat[i][j]
+        sums.append(s)
+    
+    return sums
+
+print('row_sums')
+print(row_sums([[1, 2, 3], [4, 5, 6]]))
+print(row_sums([[-1, 1], [10, -10]]))
+print(row_sums([[0, 0], [0, 0]]))
+print(row_sums([[1, 2], [3]]))
+
+
+def col_sums(mat):
+    if mat == []:
+        return []
+    
+    n = len(mat[0])
+    for i in range(len(mat)):
+        if len(mat[i]) != n:
+            return 'ValueError'
+    
+    sums = []
+    for j in range(len(mat[0])):  
+        s = 0
+        for i in range(len(mat)):  
+            s = s + mat[i][j]
+        sums.append(s)
+    
+    return sums
+
+print('col_sums')
+print(col_sums([[1, 2, 3], [4, 5, 6]]))
+print(col_sums([[-1, 1], [10, -10]]))
+print(col_sums([[0, 0], [0, 0]]))
+print(col_sums([[1, 2], [3]]))
+```
+![Картинка 1](images/lab_02/02.png)
+
+### Задание 3
+```python
+def format_record(rec):
+    fio = rec[0]
+    group = rec[1]
+    gpa = rec[2]
+    
+    if fio == "" or group == "":
+        return 'ValueError'
+    
+    if not isinstance(gpa, (int, float)):
+        return 'TypeError'
+    
+    fio_parts = fio.split()
+    clean_parts = []
+    for p in fio_parts:
+        if p != "":
+            clean_parts.append(p.strip())
+    
+    if len(clean_parts) == 3:
+        initials = clean_parts[1][0].upper() + "." + clean_parts[2][0].upper() + "."
+    elif len(clean_parts) == 2:
+        initials = clean_parts[1][0].upper() + "."
+    else:
+        return 'ValueError'
+    
+    gpa_str = str(round(gpa, 2))
+    if "." in gpa_str:
+        parts = gpa_str.split(".")
+        if len(parts[1]) == 1:
+            gpa_str = gpa_str + "0"
+    else:
+        gpa_str = gpa_str + ".00"
+
+    surname = clean_parts[0].capitalize()
+    
+    result = surname + " " + initials + ", гр. " + group + ", GPA " + gpa_str
+    return result
+
+print('format_record')
+print(format_record(("Иванов Иван Иванович", "BIVT-25", 4.6)))
+print(format_record(("Петров Пётр", "IKBO-12", 5.0)))
+print(format_record(("Петров Пётр Петрович", "IKBO-12", 5.0)))
+print(format_record(("  сидорова  анна   сергеевна ", "ABB-01", 3.999)))
+print(format_record(("", "BIVT-25", 4.0)))  # пустое фио
+```
+![Картинка 1](images/lab_02/03.png)

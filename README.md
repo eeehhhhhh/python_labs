@@ -86,20 +86,22 @@ print(f'out: {out}')
 ### Задание 1
 ```python 
 def min_max(nums):
-    if nums == []:
-        return 'ValueError'
-    
-    minimum = nums[0]
-    maximum = nums[0]
+    try:
+        if nums == []:
+            raise ValueError
+        
+        minimum = nums[0]
+        maximum = nums[0]
 
-    for i in range(len(nums)):
-        if nums[i] < minimum:
-            minimum = nums[i]
-        if nums[i] > maximum:
-            maximum = nums[i]
+        for i in range(len(nums)):
+            if nums[i] < minimum:
+                minimum = nums[i]
+            if nums[i] > maximum:
+                maximum = nums[i]
 
-    return (minimum, maximum)
-
+        return (minimum, maximum)
+    except Exception as err:
+        return repr(err)
 print('min_max')
 print(min_max([3, -1, 5, 5, 0]))
 print(min_max([42]))
@@ -131,16 +133,18 @@ print(unique_sorted([-1, -1, 0, 2, 2]))
 print(unique_sorted([1.0, 1, 2.5, 2.5, 0]))
 
 def flatten(mat):
-    result = []
-    for i in range(len(mat)):
-        if type(mat[i]) != list and type(mat[i]) != tuple:
-            return 'TypeError'
+    try:
+        result = []
+        for i in range(len(mat)):
+            if type(mat[i]) != list and type(mat[i]) != tuple:
+                raise ValueError
+            
+            for j in range(len(mat[i])):
+                result.append(mat[i][j])
         
-        for j in range(len(mat[i])):
-            result.append(mat[i][j])
-    
-    return result
-
+        return result
+    except Exception as err:
+        return repr(err)
 print('flatten')
 print(flatten([[1, 2], [3, 4]]))
 print(flatten([[1, 2], (3, 4, 5)]))
@@ -152,23 +156,25 @@ print(flatten([[1, 2], "ab"]))
 ### Задание 2
 ```python
 def transpose(mat):
-    if mat == []:
-        return []
-    
-    n = len(mat[0])
-    for i in range(len(mat)):
-        if len(mat[i]) != n:
-            return 'ValueError'
-    
-    new_mat = []
-    for j in range(len(mat[0])):  
-        new_row = []
-        for i in range(len(mat)):  
-            new_row.append(mat[i][j])
-        new_mat.append(new_row)
-    
-    return new_mat
-
+    try:    
+        if mat == []:
+            return []
+        
+        n = len(mat[0])
+        for i in range(len(mat)):
+            if len(mat[i]) != n:
+                raise ValueError
+        
+        new_mat = []
+        for j in range(len(mat[0])):  
+            new_row = []
+            for i in range(len(mat)):  
+                new_row.append(mat[i][j])
+            new_mat.append(new_row)
+        
+        return new_mat
+    except Exception as err:
+        return repr(err)   
 print('transpose')
 print(transpose([[1, 2, 3]]))
 print(transpose([[1], [2], [3]]))
@@ -178,23 +184,25 @@ print(transpose([[1, 2], [3]]))
 
 
 def row_sums(mat):
-    if mat == []:
-        return []
-    
-    n = len(mat[0])
-    for i in range(len(mat)):
-        if len(mat[i]) != n:
-            return 'ValueError'
-    
-    sums = []
-    for i in range(len(mat)):
-        s = 0
-        for j in range(len(mat[i])):
-            s = s + mat[i][j]
-        sums.append(s)
-    
-    return sums
-
+    try:
+        if mat == []:
+            return []
+        
+        n = len(mat[0])
+        for i in range(len(mat)):
+            if len(mat[i]) != n:
+                raise ValueError
+        
+        sums = []
+        for i in range(len(mat)):
+            s = 0
+            for j in range(len(mat[i])):
+                s = s + mat[i][j]
+            sums.append(s)
+        
+        return sums
+    except Exception as err:
+        return repr(err)
 print('row_sums')
 print(row_sums([[1, 2, 3], [4, 5, 6]]))
 print(row_sums([[-1, 1], [10, -10]]))
@@ -203,23 +211,25 @@ print(row_sums([[1, 2], [3]]))
 
 
 def col_sums(mat):
-    if mat == []:
-        return []
-    
-    n = len(mat[0])
-    for i in range(len(mat)):
-        if len(mat[i]) != n:
-            return 'ValueError'
-    
-    sums = []
-    for j in range(len(mat[0])):  
-        s = 0
-        for i in range(len(mat)):  
-            s = s + mat[i][j]
-        sums.append(s)
-    
-    return sums
-
+    try:
+        if mat == []:
+            return []
+        
+        n = len(mat[0])
+        for i in range(len(mat)):
+            if len(mat[i]) != n:
+                raise ValueError
+        
+        sums = []
+        for j in range(len(mat[0])):  
+            s = 0
+            for i in range(len(mat)):  
+                s = s + mat[i][j]
+            sums.append(s)
+        
+        return sums
+    except Exception as err:
+        return repr(err)
 print('col_sums')
 print(col_sums([[1, 2, 3], [4, 5, 6]]))
 print(col_sums([[-1, 1], [10, -10]]))
@@ -231,41 +241,41 @@ print(col_sums([[1, 2], [3]]))
 ### Задание 3
 ```python
 def format_record(rec):
-    fio = rec[0]
-    group = rec[1]
-    gpa = rec[2]
-    
-    if fio == "" or group == "":
-        return 'ValueError'
-    
-    if not isinstance(gpa, (int, float)):
-        return 'TypeError'
-    
-    fio_parts = fio.split()
-    clean_parts = []
-    for p in fio_parts:
-        if p != "":
-            clean_parts.append(p.strip())
-    
-    if len(clean_parts) == 3:
-        initials = clean_parts[1][0].upper() + "." + clean_parts[2][0].upper() + "."
-    elif len(clean_parts) == 2:
-        initials = clean_parts[1][0].upper() + "."
-    else:
-        return 'ValueError'
-    
-    gpa_str = str(round(gpa, 2))
-    if "." in gpa_str:
-        parts = gpa_str.split(".")
-        if len(parts[1]) == 1:
-            gpa_str = gpa_str + "0"
-    else:
-        gpa_str = gpa_str + ".00"
-
-    surname = clean_parts[0].capitalize()
-    
-    result = surname + " " + initials + ", гр. " + group + ", GPA " + gpa_str
-    return result
+    try:
+        fio = rec[0]
+        group = rec[1]
+        gpa = rec[2]
+        
+        if fio == "" or group == "":
+            raise(ValueError)
+        
+        if not isinstance(gpa, (int, float)):
+            raise(TypeError)
+        
+        fio_parts = fio.split()
+        fio_parts = [p.strip() for p in fio_parts]
+        
+        if len(fio_parts) == 3:
+            initials = fio_parts[1][0].upper() + "." + fio_parts[2][0].upper() + "."
+        elif len(fio_parts) == 2:
+            initials = fio_parts[1][0].upper() + "."
+        else:
+            raise(ValueError)
+        
+        gpa_str = str(round(gpa, 2))
+        if "." in gpa_str:
+            parts = gpa_str.split(".")
+            if len(parts[1]) == 1:
+                gpa_str = gpa_str + "0" 
+        else:
+            gpa_str = gpa_str + ".00"
+        
+        surname = fio_parts[0].capitalize() 
+        
+        result = surname + " " + initials + ", гр. " + group + ", GPA " + gpa_str
+        return result
+    except Exception as err:
+        return repr(err)
 
 print('format_record')
 print(format_record(("Иванов Иван Иванович", "BIVT-25", 4.6)))
@@ -273,5 +283,77 @@ print(format_record(("Петров Пётр", "IKBO-12", 5.0)))
 print(format_record(("Петров Пётр Петрович", "IKBO-12", 5.0)))
 print(format_record(("  сидорова  анна   сергеевна ", "ABB-01", 3.999)))
 print(format_record(("", "BIVT-25", 4.0)))  # пустое фио
+
 ```
 ![Картинка 1](images/lab_02/03.png)
+
+## Лабораторная работа 3
+
+### Задание A
+```python 
+import re
+def normalize(text: str, *, casefold: bool = True, yo2e: bool = True) -> str:
+    if casefold:
+        text = text.casefold()
+    if yo2e:
+        text.replace('Ё', 'е').replace('ё', 'е')
+    text = re.sub(r'[\t\r\n]', ' ', text) # регулярное выражение ищущее \t\r\n и заменяющее на пробел
+    text = re.sub(r' +', ' ', text) #' +' - от одного пробела и больше
+    return text.strip()
+
+print(normalize("ПрИвЕт\nМИр\t"))
+print(normalize("ёжик, Ёлка"))
+print(normalize("Hello\r\nWorld"))
+print(normalize("  двойные   пробелы  "))
+
+def tokenize(text: str) -> list[str]:
+    text = normalize(text)
+    return re.findall(r'\w+(?:-\w+)*', text) # регулярное выражение для поиска слов
+
+print(tokenize("привет мир"))
+print(tokenize("hello,world!!!"))
+print(tokenize("по-настоящему круто"))
+print(tokenize("2025 год"))
+print(tokenize("emoji 😀 не слово"))
+
+def count_freq(tokens: list[str]) -> dict[str, int]:
+    freq_dict = {}
+    for token in tokens:
+        if token in freq_dict:
+            freq_dict[token] += 1
+        else:
+            freq_dict[token] = 1
+    sorted_dict = {}
+
+    for item in sorted(freq_dict.items(), key=lambda x: (-x[1], x[0])):
+        sorted_dict[item[0]] = item[1]
+
+    return sorted_dict
+def top_n(freq: dict[str, int], n: int = 5) -> list[tuple[str, int]]:
+    sorted_items = sorted(freq.items(), key=lambda x: (-x[1], x[0]))
+    return sorted_items[:n]
+print(count_freq(["a","b","a","c","b","a"]))
+print(count_freq(["bb","aa","bb","aa","cc"]))
+print(top_n(count_freq(["a","b","a","c","b","a"]),n=2))
+print(top_n(count_freq(["bb","aa","bb","aa","cc"]),n=2))
+```
+![Картинка 1](images/lab_03/all.png)
+### Задание B
+```python
+import sys
+from text import normalize, tokenize, count_freq, top_n
+
+text = sys.stdin.read()
+nt = normalize(text)
+t = tokenize(nt)
+f = count_freq(t)
+top_words = top_n(f, 5)
+
+print(f"Всего слов: {len(t)}")
+print(f"Уникальных слов: {len(f)}")
+print("Топ-5:")
+for word, count in top_words:
+    print(f"{word}: {count}")
+```
+![Картинка 1](images/lab_03/b.png)
+

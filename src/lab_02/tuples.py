@@ -1,39 +1,39 @@
 def format_record(rec):
-    fio = rec[0]
-    group = rec[1]
-    gpa = rec[2]
-    
-    if fio == "" or group == "":
-        return 'ValueError'
-    
-    if not isinstance(gpa, (int, float)):
-        return 'TypeError'
-    
-    fio_parts = fio.split()
-    clean_parts = []
-    for p in fio_parts:
-        if p != "":
-            clean_parts.append(p.strip())
-    
-    if len(clean_parts) == 3:
-        initials = clean_parts[1][0].upper() + "." + clean_parts[2][0].upper() + "."
-    elif len(clean_parts) == 2:
-        initials = clean_parts[1][0].upper() + "."
-    else:
-        return 'ValueError'
-    
-    gpa_str = str(round(gpa, 2))
-    if "." in gpa_str:
-        parts = gpa_str.split(".")
-        if len(parts[1]) == 1:
-            gpa_str = gpa_str + "0"
-    else:
-        gpa_str = gpa_str + ".00"
-
-    surname = clean_parts[0].capitalize()
-    
-    result = surname + " " + initials + ", гр. " + group + ", GPA " + gpa_str
-    return result
+    try:
+        fio = rec[0]
+        group = rec[1]
+        gpa = rec[2]
+        
+        if fio == "" or group == "":
+            raise(ValueError)
+        
+        if not isinstance(gpa, (int, float)):
+            raise(TypeError)
+        
+        fio_parts = fio.split()
+        fio_parts = [p.strip() for p in fio_parts]
+        
+        if len(fio_parts) == 3:
+            initials = fio_parts[1][0].upper() + "." + fio_parts[2][0].upper() + "."
+        elif len(fio_parts) == 2:
+            initials = fio_parts[1][0].upper() + "."
+        else:
+            raise(ValueError)
+        
+        gpa_str = str(round(gpa, 2))
+        if "." in gpa_str:
+            parts = gpa_str.split(".")
+            if len(parts[1]) == 1:
+                gpa_str = gpa_str + "0" 
+        else:
+            gpa_str = gpa_str + ".00"
+        
+        surname = fio_parts[0].capitalize() 
+        
+        result = surname + " " + initials + ", гр. " + group + ", GPA " + gpa_str
+        return result
+    except Exception as err:
+        return repr(err)
 
 print('format_record')
 print(format_record(("Иванов Иван Иванович", "BIVT-25", 4.6)))

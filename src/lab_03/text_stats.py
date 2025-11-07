@@ -1,7 +1,7 @@
 import sys
 from text import normalize, tokenize, count_freq, top_n
 
-text = sys.stdin.read()
+text = sys.stdin.readline()
 nt = normalize(text)
 t = tokenize(nt)
 f = count_freq(t)

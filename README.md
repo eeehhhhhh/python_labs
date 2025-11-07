@@ -393,7 +393,7 @@ txt = read_text("data/input.txt")  # должен вернуть строку
 write_csv([("word","count"),("test",3)], "data/check.csv")  # создаст CSV
 ```
 ![Картинка 1](images/lab_04/test1.png)
-![Картинка 1](images/lab_04/test2.png)
+![Картинка 1](images/lab_04/image.png)
 
 ### Задание B
 ```python

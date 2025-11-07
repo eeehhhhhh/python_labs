@@ -427,7 +427,7 @@ def main():
         print(f"{word}:{count}")
 main()
 ```
-![Картинка 1](images/lab_04/test2.1.png)
+![Картинка 1](images/lab_04/testtt22.png)
 ![Картинка 1](images/lab_04/test2.png)
 
 

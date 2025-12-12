@@ -429,6 +429,248 @@ main()
 ```
 ![Картинка 1](images/lab_04/testtt22.png)
 ![Картинка 1](images/lab_04/test2.png)
+## Лабораторная работа 5
+
+### Задание A
+```python
+import json
+import csv
+from pathlib import Path
+
+def json_to_csv(json_path: str, csv_path: str) -> None:
+    json_file = Path(json_path)
+    if not json_file.exists():
+        raise FileNotFoundError(f"Файл {json_path} не найден")
+
+    with open(json_path, 'r', encoding='utf-8') as jf:
+        try:
+            data = json.load(jf)
+        except json.JSONDecodeError:
+            raise ValueError("Файл не является валидным JSON")
+
+    if not isinstance(data, list):
+        raise ValueError("JSON должен быть списком объектов")
+    if len(data) == 0:
+        raise ValueError("Пустой JSON или неподдерживаемая структура")
+    if not all(isinstance(item, dict) for item in data):
+        raise ValueError("Все элементы в списке должны быть словарями")
+
+    fieldnames = list(data[0].keys())
+    for item in data[1:]:
+        for key in item.keys():
+            if key not in fieldnames:
+                fieldnames.append(key)
+
+    with open(csv_path, 'w', newline='', encoding='utf-8') as cf:
+        writer = csv.DictWriter(cf, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in data:
+            for key in fieldnames:
+                row.setdefault(key, '')
+            writer.writerow(row)
+
+def csv_to_json(csv_path: str, json_path: str) -> None:
+
+    csv_file = Path(csv_path)
+    if not csv_file.exists():
+        raise FileNotFoundError(f"Файл {csv_path} не найден")
+
+    with open(csv_path, 'r', encoding='utf-8') as cf:
+        reader = csv.DictReader(cf)
+        if reader.fieldnames is None:
+            raise ValueError("CSV файл пуст или не содержит заголовка")
+        data = list(reader)
+
+    if len(data) == 0:
+        raise ValueError("CSV файл пуст")
+
+    with open(json_path, 'w', encoding='utf-8') as jf:
+        json.dump(data, jf, ensure_ascii=False, indent=2)
+```
+![Картинка 1](images/lab_05/json-csv.png)
+![Картинка 1](images/lab_05/csv-json.png)
+
+### Задание B
+```python
+import csv
+from openpyxl import Workbook
+from pathlib import Path
+
+def csv_to_xlsx(csv_path: str, xlsx_path: str) -> None:
+    """
+    Конвертируем CSV в XLSX с помощью openpyxl.
+    """
+    #Проверяем, существует ли файл
+    csv_file = Path(csv_path)
+    if not csv_file.exists():
+        raise FileNotFoundError(f"Файл {csv_path} не найден")
+
+    with open(csv_path, 'r', encoding='utf-8') as cf:
+        reader = csv.reader(cf)
+        try:
+            header = next(reader)
+        except StopIteration:
+            raise ValueError("CSV файл пуст")
+        rows = list(reader)
+
+    if len(header) == 0:
+        raise ValueError("CSV файл не содержит заголовка")
+
+    #Создаём новую Excel книгу
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Sheet1"
+
+    ws.append(header)
+
+    for row in rows:
+        ws.append(row)
+
+    for col in ws.columns:
+        max_length = 0
+        column = col[0].column_letter
+        
+        for cell in col:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        
+        #Минимальная ширина — 8 символов
+        adjusted_width = max(max_length + 2, 8)
+        ws.column_dimensions[column].width = adjusted_width
+
+    #Сохраняем файл
+    wb.save(xlsx_path)
+```
+![Картинка 1](images/lab_05/csv-xlsx.png)
+
+## Лабораторная работа 5
+
+### Задание A
+```python
+import argparse
+import sys
+import os
+sys.path.append('/Users/mda/Desktop/python_labs/src/lab_03')
+from text import tokenize
+from text import normalize
+from text import count_freq
+from text import top_n
+
+def cat(input_path, number_lines):
+    with open(input_path, 'r', encoding='utf-8') as file:
+        for i, line in enumerate(file, 1):
+            if number_lines:
+                print(f"{i}:{line}", end='')
+
+def stats(input_text, n=5):
+    with open(input_text, 'r', encoding='utf-8') as f:
+        text = f.read()
+    tokens = tokenize(normalize(text))
+    freq = count_freq(tokens)
+    top_words = top_n(freq, n)
+
+    for word, count in top_words:
+        print(f"{word}: {count}")
+
+def main():
+    parser = argparse.ArgumentParser(description="CLI-утилиты лабораторной №6")
+    subparsers = parser.add_subparsers(dest="command")
+
+    # Подкоманда cat
+    cat_parser = subparsers.add_parser("cat", help="Вывести содержимое файла")
+    cat_parser.add_argument("--input", required=True, help="Путь к файлу")
+    cat_parser.add_argument("-n", action="store_true", help="Нумеровать строки")
+
+    # Подкоманда stats
+    stats_parser = subparsers.add_parser("stats", help="Частоты слов в тексте")
+    stats_parser.add_argument("--input", required=True, help="Путь к текстовому файлу")
+    stats_parser.add_argument("--top", type=int, default=5, help="Количество слов в топе")
+
+    args = parser.parse_args()
+
+    if args.command == "cat":
+        cat(args.input, args.n)
+    if args.command == "stats":
+        stats(args.input, args.top)
+
+
+if __name__ == "__main__":
+    main()
+```
+![Картинка 1](images/lab_06/image1.png)
+![Картинка 1](images/lab_06/image2.png)
+
+### Задание B
+```
+import argparse
+import os
+import sys
+sys.path.append('/Users/mda/Desktop/python_labs/src/lab05/')
+from json_csv import json_to_csv
+from json_csv import csv_to_json
+from csv_xlsx import csv_to_xlsx
+
+def json2csv(input_file, output_file):
+    json_to_csv(input_file, output_file)
+
+def csv2json(input_file, output_file):
+    csv_to_json(input_file, output_file)
+
+def csv2xlsx(input_file, output_file):
+    csv_to_xlsx(input_file, output_file)
+
+def main():
+    parser = argparse.ArgumentParser(description="Конвертеры данных")
+    subparsers = parser.add_subparsers(dest="cmd", required=True)
+
+    # json2csv
+    p1 = subparsers.add_parser("json2csv", help="Конвертировать JSON в CSV")
+    p1.add_argument("--in", dest="input", required=True, help="Входной JSON файл")
+    p1.add_argument("--out", dest="output", required=True, help="Выходной CSV файл")
+
+    # csv2json
+    p2 = subparsers.add_parser("csv2json", help="Конвертировать CSV в JSON")
+    p2.add_argument("--in", dest="input", required=True, help="Входной CSV файл")
+    p2.add_argument("--out", dest="output", required=True, help="Выходной JSON файл")
+
+    # csv2xlsx
+    p3 = subparsers.add_parser("csv2xlsx", help="Конвертировать CSV в XLSX")
+    p3.add_argument("--in", dest="input", required=True, help="Входной CSV файл")
+    p3.add_argument("--out", dest="output", required=True, help="Выходной XLSX файл")
+
+    args = parser.parse_args()
+
+    # Проверяем, существует ли входной файл
+    if not os.path.exists(args.input):
+        print(f"Ошибка: файл {args.input} не найден", file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        if args.cmd == "json2csv":
+            json_to_csv(args.input, args.output)
+        elif args.cmd == "csv2json":
+            csv_to_json(args.input, args.output)
+        elif args.cmd == "csv2xlsx":
+            csv_to_xlsx(args.input, args.output)
+        print("Готово!")
+    except Exception as e:
+        print(f"Ошибка при конвертации: {e}", file=sys.stderr)
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
+```
+![Картинка 1](images/lab_06/image3.png)
+![Картинка 1](images/lab_06/image4.png)
+![Картинка 1](images/lab_06/imag5.png)
+
+## Лабораторная работа 7
+
+
+
 
 
 

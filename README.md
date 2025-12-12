@@ -546,7 +546,7 @@ def csv_to_xlsx(csv_path: str, xlsx_path: str) -> None:
 ```
 ![Картинка 1](images/lab_05/csv-xlsx.png)
 
-## Лабораторная работа 5
+## Лабораторная работа 6
 
 ### Задание A
 ```python
@@ -604,7 +604,7 @@ if __name__ == "__main__":
 ![Картинка 1](images/lab_06/image2.png)
 
 ### Задание B
-```
+```python
 import argparse
 import os
 import sys

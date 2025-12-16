@@ -1336,7 +1336,7 @@ except IndexError as e:
 ```
 ![№1](images/lab_10/image2.png)
 
-##конец
+# конец
 
 
 

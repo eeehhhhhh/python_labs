@@ -1335,7 +1335,8 @@ except IndexError as e:
     print(f"   Ошибка: {e}")
 ```
 ![№1](images/lab_10/image2.png)
-#конец
+
+##конец
 
 
 

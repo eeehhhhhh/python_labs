@@ -669,6 +669,676 @@ if __name__ == "__main__":
 
 ## Лабораторная работа 7
 
+### Задание A
+```python
+import pytest
+import sys
+import os
+
+sys.path.append("/Users/mda/Desktop/python_labs/src/lib")
+from text import *
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ("ПрИвЕт\nМИр\t", "привет мир"),
+        ("ёжик, Ёлка", "ежик, елка"),
+        ("Hello\r\nWorld", "hello world"),
+        ("  двойные   пробелы  ", "двойные пробелы"),
+        ("", ""),
+    ],
+)
+def test_normalize(text, expected):
+    assert normalize(text) == expected
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ("привет мир", ["привет", "мир"]),
+        ("hello,world!!!", ["hello", "world"]),
+        ("по-настоящему круто", ["по-настоящему", "круто"]),
+        ("2025 год", ["2025", "год"]),
+        ("emoji 😀 не слово", ["emoji", "не", "слово"]),
+        ("", []),
+    ],
+)
+def test_tokenize(text, expected):
+    assert tokenize(text) == expected
+
+@pytest.mark.parametrize(
+    "tokens, expected",
+    [
+        (["a", "b", "a", "c", "b", "a"], {"a": 3, "b": 2, "c": 1}),
+        (["bb", "aa", "bb", "aa", "cc"], {"aa": 2, "bb": 2, "cc": 1}),
+        ([], {}),
+    ],
+)
+def test_count_freq(tokens, expected):
+    assert count_freq(tokens) == expected
+
+@pytest.mark.parametrize(
+    "freq, n, expected",
+    [
+        ({"a": 3, "b": 2, "c": 1}, 2, [("a", 3), ("b", 2)]),
+        ({"aa": 2, "bb": 2, "cc": 1}, 2, [("aa", 2), ("bb", 2)]),
+        ({}, 5, []),
+        ({"a": 3}, 0, []),
+        ({"a": 3, "b": 2}, 10, [("a", 3), ("b", 2)]),
+    ],
+)
+def test_top_n(freq, n, expected):
+    assert top_n(freq, n) == expected
+```
+![Картинка 1](images/lab_07/image1.png)
+
+### Задание B
+```python
+import pytest
+import json
+import csv
+import sys
+from pathlib import Path
+sys.path.append("/Users/mda/Desktop/python_labs/src/lab_05/")
+from json_csv import json_to_csv, csv_to_json
+from csv_xlsx import*
+
+# положительные сценарии
+
+def test_json_to_csv_positive(tmp_path: Path):
+    src = tmp_path / "input.json"
+    dst = tmp_path / "output.csv"
+    data = [
+        {"name": "Alice", "age": 22},
+        {"name": "Bob", "age": 25},
+    ]
+    src.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    json_to_csv(str(src), str(dst))
+    with dst.open(encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+    assert len(rows) == 2
+    assert set(rows[0].keys()) == {"name", "age"}
+    assert rows[0]["name"] == "Alice"
+
+
+def test_csv_to_json_positive(tmp_path: Path):
+    src = tmp_path / "input.csv"
+    dst = tmp_path / "output.json"
+    with src.open("w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=["name", "age"])
+        writer.writeheader()
+        writer.writerow({"name": "Alice", "age": "22"})
+        writer.writerow({"name": "Bob", "age": "25"})
+    csv_to_json(str(src), str(dst))
+    result = json.loads(dst.read_text(encoding="utf-8"))
+    assert len(result) == 2
+    assert set(result[0].keys()) == {"name", "age"}
+    assert result[1]["name"] == "Bob"
+
+# негативные сценарии
+
+@pytest.mark.parametrize(
+    "case",
+    [
+        (json_to_csv, "json", "", ValueError),
+        (csv_to_json, "csv", "", ValueError),
+        (json_to_csv, "json", None, FileNotFoundError),
+        (csv_to_json, "csv", None, FileNotFoundError),
+    ]
+)
+def test_negative_cases(tmp_path: Path, case):
+    converter, ext, content, exc = case
+    src = tmp_path / f"bad.{ext}"
+    dst = tmp_path / "out.tmp"
+    if content is not None:
+        src.write_text(content, encoding="utf-8")
+    with pytest.raises(exc):
+        converter(str(src), str(dst))
+```
+![Картинка 1](images/lab_07/image2.png)
+
+# Лабораторная работа 8
+## задание A
+```python
+from dataclasses import dataclass
+from datetime import datetime, date
+import json
+
+@dataclass
+class Student:
+    fio: str
+    birthdate: str
+    group: str
+    gpa: float
+
+    def __post_init__(self):
+        try:
+            datetime.strptime(self.birthdate, "%Y-%m-%d")
+        except ValueError:
+            raise ValueError("Дата должна быть в формате YYYY-MM-DD")
+        
+        if not (0 <= self.gpa <= 5):
+            raise ValueError("gpa must be between 0 and 5")
+
+    def age(self) -> int:
+        b = datetime.strptime(self.birthdate, "%Y-%m-%d").date()
+        today = date.today()
+        age = today.year - b.year
+        # Проверяем, был ли уже день рождения в этом году
+        if (today.month, today.day) < (b.month, b.day):
+            age -= 1
+        return age
+
+    def to_dict(self) -> dict:
+        return {
+            "fio": self.fio,
+            "birthdate": self.birthdate,
+            "group": self.group,
+            "gpa": self.gpa
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict):
+        return cls(
+            fio=d["fio"],
+            birthdate=d["birthdate"],
+            group=d["group"],
+            gpa=d["gpa"]
+        )
+
+    def __str__(self):
+         return f"студент: {self.fio}, группа: {self.group}, GPA {self.gpa}, возраст: {self.age()}"
+    
+s = Student(fio="Вася Васин", birthdate="2007-02-12", group="BIVT-25-3", gpa=3.2)
+print(f"Возраст: {s.age()}")
+print(f"{s.to_dict()}")
+s.from_dict(s.to_dict())
+print(f"{s.__str__()}")
+```
+![№1](images/lab_08/image1.png)
+
+## задание B
+```python
+import json
+from models import Student
+
+def students_to_json(students, path):
+    # Сохраняет список студентов в JSON-файл
+    data = [s.to_dict() for s in students]
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+def students_from_json(path):
+    # Читает JSON-файл и возвращает список объектов Student
+    with open(path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    
+    students = []
+    for item in data:
+        students.append(Student.from_dict(item))
+    
+    return students
+```
+![№1](images/lab_08/image2.png)
+
+# Лабораторная работа 9
+## Задание 1
+```python
+import sys
+import csv
+from pathlib import Path
+sys.path.append('/Users/mda/Desktop/python_labs/src/lab08/')
+from models import Student
+class Group:
+    def __init__(self, storage_path: str):
+        self.path = Path(storage_path)
+        if not self.path.exists():
+            self._ensure_storage_exists()
+
+    def _ensure_storage_exists(self):
+        #Создаёт файл с заголовком, если его нет
+        with open(self.path, 'w', encoding='utf-8', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=['fio', 'birthdate', 'group', 'gpa'])
+            writer.writeheader()
+
+    def _read_all(self):
+        #Читает все строки из CSV и возвращает список словарей
+        rows = []
+        try:
+            with open(self.path, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    rows.append(row)
+        except Exception as e:
+            print(f"Ошибка при чтении файла: {e}")
+        return rows
+
+    def list(self):
+        rows = self._read_all()
+        students = []
+        for row in rows:
+            try:
+                # Преобразуем gpa из строки в float
+                student_dict = {
+                    'fio': row['fio'],
+                    'birthdate': row['birthdate'],
+                    'group': row['group'],
+                    'gpa': float(row['gpa'])
+                }
+                students.append(Student.from_dict(student_dict))
+            except (ValueError, KeyError) as e:
+                print(f"Ошибка при создании студента {row.get('fio', 'Unknown')}: {e}")
+                continue
+        return students
+
+    def add(self, student: Student):
+        try:
+            with open(self.path, 'a', encoding='utf-8', newline='') as f:
+                writer = csv.DictWriter(f, fieldnames=['fio', 'birthdate', 'group', 'gpa'])
+                writer.writerow(student.to_dict())
+            return True
+        except Exception as e:
+            print(f"Ошибка при добавлении студента: {e}")
+            return False
+
+    def find(self, substr: str):
+        rows = self._read_all()
+        result = []
+        for row in rows:
+            try:
+                if substr.lower() in row['fio'].lower():
+                    student_dict = {
+                        'fio': row['fio'],
+                        'birthdate': row['birthdate'],
+                        'group': row['group'],
+                        'gpa': float(row['gpa'])
+                    }
+                    result.append(Student.from_dict(student_dict))
+            except (ValueError, KeyError) as e:
+                print(f"Ошибка при обработке студента {row.get('fio', 'Unknown')}: {e}")
+                continue
+        return result
+
+    def remove(self, fio: str):
+        rows = self._read_all()
+        if not rows:
+            return False
+            
+        new_rows = [row for row in rows if row['fio'] != fio]
+        
+        if len(new_rows) == len(rows):
+            return False  # Не нашли студента
+        
+        try:
+            with open(self.path, 'w', encoding='utf-8', newline='') as f:
+                writer = csv.DictWriter(f, fieldnames=['fio', 'birthdate', 'group', 'gpa'])
+                writer.writeheader()
+                writer.writerows(new_rows)
+            return True
+        except Exception as e:
+            print(f"Ошибка при удалении студента: {e}")
+            return False
+
+    def update(self, fio: str, **fields):
+        rows = self._read_all()
+        if not rows:
+            return False
+            
+        updated = False
+        
+        for row in rows:
+            if row['fio'] == fio:
+                for key, value in fields.items():
+                    if key in row:
+                        # Преобразуем gpa к строке, если это число
+                        if key == 'gpa' and isinstance(value, (int, float)):
+                            row[key] = str(value)
+                        else:
+                            row[key] = value
+                updated = True
+                break
+        
+        if updated:
+            try:
+                with open(self.path, 'w', encoding='utf-8', newline='') as f:
+                    writer = csv.DictWriter(f, fieldnames=['fio', 'birthdate', 'group', 'gpa'])
+                    writer.writeheader()
+                    writer.writerows(rows)
+                return True
+            except Exception as e:
+                print(f"Ошибка при обновлении студента: {e}")
+                return False
+        return False
+```
+## тест
+```python
+import sys
+from group import Group
+sys.path.append('/Users/mda/Desktop/python_labs/src/lab_08/')
+from models import Student
+group = Group("/Users/mda/Desktop/python_labs/data/lab_09/students.csv")
+
+print("=== 1. Добавление студентов ===")
+group.add(Student("Иванов Иван", "2003-10-10", "БИВТ-21-1", 4.3))
+group.add(Student("Петров Петр", "2004-05-15", "ПИ-22-2", 4.7))
+group.add(Student("Сидорова Анна", "2003-12-22", "БИВТ-21-1", 3.9))
+print("Добавлено 3 студента\n")
+
+print("=== 2. Список всех студентов ===")
+all_students = group.list()
+if all_students:
+    for s in all_students:
+        print(f"  - {s}")
+else:
+    print("  Нет студентов")
+print()
+
+print("=== 3. Поиск по подстроке 'ив' ===")
+found = group.find("ив")
+if found:
+    for s in found:
+        print(f"  - {s}")
+else:
+    print("  Не найдено")
+print()
+
+print("=== 4. Обновление студента ===")
+if group.update("Иванов Иван", gpa=4.8, group="БИВТ-21-2"):
+    print("  Студент обновлен")
+else:
+    print("  Студент не найден")
+print()
+
+print("=== 5. Удаление студента ===")
+if group.remove("Петров Петр"):
+    print("  Студент удален")
+else:
+    print("  Студент не найден")
+print()
+
+print("=== 6. Финальный список ===")
+final_students = group.list()
+if final_students:
+    for s in final_students:
+        print(f"  - {s}")
+else:
+    print("  Нет студентов")
+```
+![№1](images/lab_09/image1.png)
+![№2](images/lab_09/image2.png)
+
+# Лабораторная работа 10
+## Задание A
+```python
+class Stack:
+    def __init__(self):
+        self._data = []  # вершина стека - последний элемент списка
+    
+    def push(self, item):
+        # Добавить элемент на вершину стека
+        self._data.append(item)
+    
+    def pop(self):
+        # Снять верхний элемент стека и вернуть его
+        if self.is_empty():
+            raise IndexError("Попытка извлечения из пустого стека")
+        return self._data.pop()
+    
+    def peek(self):
+        # Вернуть верхний элемент без удаления
+        if self.is_empty():
+            return None
+        return self._data[-1]
+    
+    def is_empty(self):
+        # Проверить, пуст ли стек
+        return len(self._data) == 0
+    
+    def __len__(self):
+        # Количество элементов в стеке
+        return len(self._data)
+    
+    def __repr__(self):
+        return f"Stack({self._data})"
+
+
+class Queue:
+    def __init__(self):
+        from collections import deque
+        self._data = deque()  # голова очереди - левый край
+    
+    def enqueue(self, item):
+        # Добавить элемент в конец очереди
+        self._data.append(item)
+    
+    def dequeue(self):
+        # Взять элемент из начала очереди и вернуть его
+        if self.is_empty():
+            raise IndexError("Попытка извлечения из пустой очереди")
+        return self._data.popleft()
+    
+    def peek(self):
+        # Вернуть первый элемент без удаления
+        if self.is_empty():
+            return None
+        return self._data[0]
+    
+    def is_empty(self):
+        # Проверить, пуста ли очередь
+        return len(self._data) == 0
+    
+    def __len__(self):
+        # Количество элементов в очереди
+        return len(self._data)
+    
+    def __repr__(self):
+        return f"Queue({list(self._data)})"
+    
+    print("=== Тестирование Stack ===")
+stack = Stack()
+stack.push(1)
+stack.push(2)
+stack.push(3)
+print(f"Стек: {stack}")
+print(f"Вершина: {stack.peek()}")
+print(f"Размер: {len(stack)}")
+
+popped = stack.pop()
+print(f"Извлечено: {popped}")
+print(f"Теперь стек: {stack}")
+print(f"Пуст ли? {stack.is_empty()}")
+
+print("\n=== Тестирование Queue ===")
+queue = Queue()
+queue.enqueue("a")
+queue.enqueue("b")
+queue.enqueue("c")
+print(f"Очередь: {queue}")
+print(f"Первый элемент: {queue.peek()}")
+print(f"Размер: {len(queue)}")
+
+dequeued = queue.dequeue()
+print(f"Извлечено: {dequeued}")
+print(f"Теперь очередь: {queue}")
+print(f"Пуста ли? {queue.is_empty()}")
+```
+
+![№1](images/lab_10/image1.png)
+
+# Задание B
+```python
+class Node:
+    def __init__(self, value):
+        self.value = value
+        self.next = None  # ссылка на следующий узел
+    
+    def __repr__(self):
+        return f"Node({self.value})"
+
+
+class SinglyLinkedList:
+    def __init__(self):
+        self.head = None  # первый элемент
+        self.tail = None  # последний элемент
+        self._size = 0    # количество элементов
+    
+    def append(self, value):
+        # Добавить элемент в конец списка за O(1)
+        new_node = Node(value)
+        
+        if self.head is None:  # список пуст
+            self.head = new_node
+            self.tail = new_node
+        else:
+            self.tail.next = new_node
+            self.tail = new_node
+        
+        self._size += 1
+    
+    def prepend(self, value):
+        # Добавить элемент в начало списка за O(1)
+        new_node = Node(value)
+        
+        if self.head is None:  # список пуст
+            self.head = new_node
+            self.tail = new_node
+        else:
+            new_node.next = self.head
+            self.head = new_node
+        
+        self._size += 1
+    
+    def insert(self, idx, value):
+        # Вставить элемент по индексу idx
+        if idx < 0 or idx > self._size:
+            raise IndexError(f"Индекс {idx} вне диапазона [0, {self._size}]")
+        
+        if idx == 0:
+            self.prepend(value)
+        elif idx == self._size:
+            self.append(value)
+        else:
+            # Вставка в середину
+            new_node = Node(value)
+            current = self.head
+            
+            # Переходим к элементу перед позицией вставки
+            for _ in range(idx - 1):
+                current = current.next
+            
+            new_node.next = current.next
+            current.next = new_node
+            self._size += 1
+    
+    def remove_by_value(self, value):
+        # Удалить первое вхождение значения value
+        if self.head is None:
+            return  # ничего не делаем, список пуст
+        
+        # Если удаляем голову
+        if self.head.value == value:
+            self.head = self.head.next
+            if self.head is None:  # если список стал пустым
+                self.tail = None
+            self._size -= 1
+            return
+        
+        # Ищем элемент для удаления
+        current = self.head
+        while current.next is not None and current.next.value != value:
+            current = current.next
+        
+        # Если нашли элемент для удаления
+        if current.next is not None:
+            current.next = current.next.next
+            if current.next is None:  # если удалили последний элемент
+                self.tail = current
+            self._size -= 1
+    
+    def remove_by_index(self, idx):
+        # Удалить элемент по индексу idx
+        if idx < 0 or idx >= self._size:
+            raise IndexError(f"Индекс {idx} вне диапазона [0, {self._size})")
+        
+        if idx == 0:  # удаление головы
+            self.head = self.head.next
+            if self.head is None:  # если список стал пустым
+                self.tail = None
+        else:
+            current = self.head
+            # Переходим к элементу перед удаляемым
+            for _ in range(idx - 1):
+                current = current.next
+            
+            # Удаляем элемент
+            current.next = current.next.next
+            if current.next is None:  # если удалили последний элемент
+                self.tail = current
+        
+        self._size -= 1
+    
+    def __iter__(self):
+        # Итератор по значениям списка
+        current = self.head
+        while current is not None:
+            yield current.value
+            current = current.next
+    
+    def __len__(self):
+        # Количество элементов в списке
+        return self._size
+    
+    def __repr__(self):
+        # Строковое представление списка
+        values = list(self)
+        return f"SinglyLinkedList({values})"
+
+print("=== Тестирование SinglyLinkedList ===")
+ll = SinglyLinkedList()
+
+print("1. Добавление в конец (append):")
+ll.append(10)
+ll.append(20)
+ll.append(30)
+print(f"   Список: {ll}")
+print(f"   Размер: {len(ll)}")
+
+print("\n2. Добавление в начало (prepend):")
+ll.prepend(5)
+ll.prepend(1)
+print(f"   Список: {ll}")
+
+print("\n3. Вставка по индексу (insert):")
+ll.insert(2, 15)  # между 10 и 20
+ll.insert(0, 0)   # в начало
+ll.insert(len(ll), 40)  # в конец
+print(f"   Список: {ll}")
+
+print("\n4. Удаление по значению (remove_by_value):")
+ll.remove_by_value(15)
+print(f"   После удаления 15: {ll}")
+
+print("\n5. Удаление по индексу (remove_by_index):")
+ll.remove_by_index(0)  # удаляем первый
+ll.remove_by_index(2)  # удаляем третий
+print(f"   После удалений: {ll}")
+
+print("\n6. Итерация по списку:")
+print("   Элементы:", end=" ")
+for item in ll:
+    print(item, end=" ")
+print()
+
+print("\n7. Попытка вставки с неверным индексом:")
+try:
+    ll.insert(100, 999)
+except IndexError as e:
+    print(f"   Ошибка: {e}")
+```
+![№1](images/lab_10/image2.png)
+
+
+
+
 
 
 
